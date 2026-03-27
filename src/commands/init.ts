@@ -23,6 +23,7 @@ const EDITOR_CHOICES: EditorChoice[] = [
   { name: 'Cursor - Opens Cursor IDE', value: 'cursor' },
   { name: 'Windsurf - Opens Windsurf IDE', value: 'windsurf' },
   { name: 'VS Code - Opens VS Code', value: 'vscode' },
+  { name: 'Project Terminal - Opens Project Terminal app', value: 'terminal-app' },
   { name: "None - Skip, I'll configure manually", value: 'none' },
 ];
 
