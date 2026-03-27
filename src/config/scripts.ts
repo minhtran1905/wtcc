@@ -128,6 +128,32 @@ code "$WORKTREE_PATH"
 `;
 
 /**
+ * Terminal App open script - opens Project Terminal with project name and path
+ * Uses WORKTREE_PATH and WORKTREE_NAME environment variables
+ */
+const TERMINAL_APP_OPEN_SCRIPT = `#!/bin/bash
+# wtcc open script - Project Terminal
+# Environment variables:
+#   WORKTREE_PATH - full path to worktree
+#   WORKTREE_NAME - sanitized name
+#   BRANCH_NAME   - original branch name
+
+APP="/Users/minhtranhuu/Documents/jitera/terminal-app/dist/mac-arm64/Project Terminal.app/Contents/MacOS/Project Terminal"
+
+"$APP" "--project-name=$WORKTREE_NAME" "--project-path=$WORKTREE_PATH" &
+disown
+`;
+
+/**
+ * Terminal App close script - closes Project Terminal project
+ * Uses WORKTREE_NAME environment variable
+ */
+const TERMINAL_APP_CLOSE_SCRIPT = `#!/bin/bash
+# wtcc close script - Project Terminal
+# No-op: Project Terminal manages its own sessions
+`;
+
+/**
  * VS Code close script - closes VS Code window via AppleScript
  * Uses WORKTREE_PATH and WORKTREE_NAME environment variables
  */
@@ -157,6 +183,7 @@ const OPEN_SCRIPTS: Record<EditorType, string | null> = {
   cursor: CURSOR_OPEN_SCRIPT,
   windsurf: WINDSURF_OPEN_SCRIPT,
   vscode: VSCODE_OPEN_SCRIPT,
+  'terminal-app': TERMINAL_APP_OPEN_SCRIPT,
   none: null,
 };
 
@@ -168,6 +195,7 @@ const CLOSE_SCRIPTS: Record<EditorType, string | null> = {
   cursor: CURSOR_CLOSE_SCRIPT,
   windsurf: WINDSURF_CLOSE_SCRIPT,
   vscode: VSCODE_CLOSE_SCRIPT,
+  'terminal-app': TERMINAL_APP_CLOSE_SCRIPT,
   none: null,
 };
 
@@ -199,6 +227,8 @@ export {
   WINDSURF_CLOSE_SCRIPT,
   VSCODE_OPEN_SCRIPT,
   VSCODE_CLOSE_SCRIPT,
+  TERMINAL_APP_OPEN_SCRIPT,
+  TERMINAL_APP_CLOSE_SCRIPT,
   OPEN_SCRIPTS,
   CLOSE_SCRIPTS,
 };
