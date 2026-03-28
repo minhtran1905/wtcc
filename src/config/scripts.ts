@@ -138,10 +138,19 @@ const TERMINAL_APP_OPEN_SCRIPT = `#!/bin/bash
 #   WORKTREE_NAME - sanitized name
 #   BRANCH_NAME   - original branch name
 
-APP="/Users/minhtranhuu/Documents/jitera/terminal-app/dist/mac-arm64/Project Terminal.app/Contents/MacOS/Project Terminal"
+# Find Project Terminal app bundle and run binary directly
+# (open -a reorders args, breaking Electron's argv parsing)
+APP_BUNDLE=$(mdfind "kMDItemFSName == 'Project Terminal.app'" 2>/dev/null | head -1)
 
-"$APP" "--project-name=$WORKTREE_NAME" "--project-path=$WORKTREE_PATH" &
-disown
+if [ -z "$APP_BUNDLE" ]; then
+  echo "Error: Project Terminal app not found"
+  exit 1
+fi
+
+APP="$APP_BUNDLE/Contents/MacOS/Project Terminal"
+nohup "$APP" "--project-name=$WORKTREE_NAME" "--project-path=$WORKTREE_PATH" > /dev/null 2>&1 &
+sleep 1
+open -a "Project Terminal"
 `;
 
 /**
