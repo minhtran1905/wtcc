@@ -140,7 +140,17 @@ const TERMINAL_APP_OPEN_SCRIPT = `#!/bin/bash
 
 # Find Project Terminal app bundle and run binary directly
 # (open -a reorders args, breaking Electron's argv parsing)
-APP_BUNDLE=$(mdfind "kMDItemFSName == 'Project Terminal.app'" 2>/dev/null | head -1)
+APP_BUNDLE=""
+for loc in "/Applications/Project Terminal.app" "$HOME/Applications/Project Terminal.app" "$HOME/Documents/ProjectTerminal/dist/mac-arm64/Project Terminal.app"; do
+  if [ -d "$loc" ]; then
+    APP_BUNDLE="$loc"
+    break
+  fi
+done
+# Fallback to Spotlight
+if [ -z "$APP_BUNDLE" ]; then
+  APP_BUNDLE=$(mdfind "kMDItemFSName == 'Project Terminal.app'" 2>/dev/null | head -1)
+fi
 
 if [ -z "$APP_BUNDLE" ]; then
   echo "Error: Project Terminal app not found"
