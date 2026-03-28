@@ -138,10 +138,7 @@ const TERMINAL_APP_OPEN_SCRIPT = `#!/bin/bash
 #   WORKTREE_NAME - sanitized name
 #   BRANCH_NAME   - original branch name
 
-APP="/Users/minhtranhuu/Documents/jitera/terminal-app/dist/mac-arm64/Project Terminal.app/Contents/MacOS/Project Terminal"
-
-"$APP" "--project-name=$WORKTREE_NAME" "--project-path=$WORKTREE_PATH" &
-disown
+open -a "Project Terminal" --args "--project-name=$WORKTREE_NAME" "--project-path=$WORKTREE_PATH"
 `;
 
 /**
