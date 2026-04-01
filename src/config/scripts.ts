@@ -154,6 +154,87 @@ const TERMINAL_APP_CLOSE_SCRIPT = `#!/bin/bash
 `;
 
 /**
+ * VsCodeSwitch open script - adds project to VsCodeSwitch app and opens it
+ * Uses WORKTREE_PATH and WORKTREE_NAME environment variables
+ */
+const VSCODE_SWITCH_OPEN_SCRIPT = `#!/bin/bash
+# wtcc open script - VsCodeSwitch
+# Environment variables:
+#   WORKTREE_PATH - full path to worktree
+#   WORKTREE_NAME - sanitized name
+#   BRANCH_NAME   - original branch name
+
+PROJECTS_FILE="$HOME/Library/Application Support/vscode-switch/projects.json"
+
+# Ensure projects directory exists
+mkdir -p "$(dirname "$PROJECTS_FILE")"
+
+# Add project to projects.json
+python3 -c "
+import json, uuid, os
+path = '$PROJECTS_FILE'
+if os.path.exists(path):
+    data = json.load(open(path))
+else:
+    data = {'projects': [], 'lastActiveProjectId': None}
+existing = next((p for p in data['projects'] if p['path'] == '$WORKTREE_PATH'), None)
+if existing:
+    data['lastActiveProjectId'] = existing['id']
+else:
+    new_id = str(uuid.uuid4())
+    data['projects'].append({'id': new_id, 'name': '$WORKTREE_NAME', 'path': '$WORKTREE_PATH'})
+    data['lastActiveProjectId'] = new_id
+json.dump(data, open(path, 'w'), indent=2)
+"
+
+# Quit VsCodeSwitch if running, then reopen so it loads the new project
+osascript -e 'tell application "VsCodeSwitch" to quit' 2>/dev/null
+sleep 1
+open -a VsCodeSwitch
+
+# Also open Project Terminal
+TERMINAL_APP="\${PROJECT_TERMINAL_APP:-}"
+if [ -z "$TERMINAL_APP" ]; then
+  if [ -d "/Applications/Project Terminal.app" ]; then
+    TERMINAL_APP="/Applications/Project Terminal.app/Contents/MacOS/Project Terminal"
+  else
+    TERMINAL_APP=$(mdfind 'kMDItemCFBundleIdentifier == "com.minhtran.project-terminal"' 2>/dev/null | grep -m1 '/Applications/' || mdfind 'kMDItemCFBundleIdentifier == "com.minhtran.project-terminal"' 2>/dev/null | head -1)
+    if [ -n "$TERMINAL_APP" ]; then
+      TERMINAL_APP="$TERMINAL_APP/Contents/MacOS/Project Terminal"
+    fi
+  fi
+fi
+if [ -n "$TERMINAL_APP" ] && [ -f "$TERMINAL_APP" ]; then
+  "$TERMINAL_APP" "--project-name=$WORKTREE_NAME" "--project-path=$WORKTREE_PATH" &
+  disown
+fi
+`;
+
+/**
+ * VsCodeSwitch close script - removes project from VsCodeSwitch app
+ * Uses WORKTREE_PATH environment variable
+ */
+const VSCODE_SWITCH_CLOSE_SCRIPT = `#!/bin/bash
+# wtcc close script - VsCodeSwitch
+# Remove project from VsCodeSwitch projects list
+
+PROJECTS_FILE="$HOME/Library/Application Support/vscode-switch/projects.json"
+
+if [ -f "$PROJECTS_FILE" ]; then
+  python3 -c "
+import sys, json
+data = json.load(open('$PROJECTS_FILE'))
+data['projects'] = [p for p in data.get('projects', []) if p.get('path') != '$WORKTREE_PATH']
+if data.get('lastActiveProjectId'):
+    ids = [p['id'] for p in data['projects']]
+    if data['lastActiveProjectId'] not in ids:
+        data['lastActiveProjectId'] = ids[0] if ids else None
+json.dump(data, open('$PROJECTS_FILE', 'w'), indent=2)
+"
+fi
+`;
+
+/**
  * VS Code close script - closes VS Code window via AppleScript
  * Uses WORKTREE_PATH and WORKTREE_NAME environment variables
  */
@@ -183,6 +264,7 @@ const OPEN_SCRIPTS: Record<EditorType, string | null> = {
   cursor: CURSOR_OPEN_SCRIPT,
   windsurf: WINDSURF_OPEN_SCRIPT,
   vscode: VSCODE_OPEN_SCRIPT,
+  'vscode-switch': VSCODE_SWITCH_OPEN_SCRIPT,
   'terminal-app': TERMINAL_APP_OPEN_SCRIPT,
   none: null,
 };
@@ -195,6 +277,7 @@ const CLOSE_SCRIPTS: Record<EditorType, string | null> = {
   cursor: CURSOR_CLOSE_SCRIPT,
   windsurf: WINDSURF_CLOSE_SCRIPT,
   vscode: VSCODE_CLOSE_SCRIPT,
+  'vscode-switch': VSCODE_SWITCH_CLOSE_SCRIPT,
   'terminal-app': TERMINAL_APP_CLOSE_SCRIPT,
   none: null,
 };
@@ -227,6 +310,8 @@ export {
   WINDSURF_CLOSE_SCRIPT,
   VSCODE_OPEN_SCRIPT,
   VSCODE_CLOSE_SCRIPT,
+  VSCODE_SWITCH_OPEN_SCRIPT,
+  VSCODE_SWITCH_CLOSE_SCRIPT,
   TERMINAL_APP_OPEN_SCRIPT,
   TERMINAL_APP_CLOSE_SCRIPT,
   OPEN_SCRIPTS,

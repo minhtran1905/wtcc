@@ -1,4 +1,4 @@
-export type EditorType = 'tmux' | 'cursor' | 'windsurf' | 'vscode' | 'terminal-app' | 'none';
+export type EditorType = 'tmux' | 'cursor' | 'windsurf' | 'vscode' | 'vscode-switch' | 'terminal-app' | 'none';
 
 export interface WtccConfig {
   /** Base path for worktree creation (relative to project root) */
